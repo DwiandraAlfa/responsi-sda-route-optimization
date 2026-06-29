@@ -88,7 +88,7 @@ public class RouteOptimizationApp {
 
     // Inisialisasi titik koordinat/peta simulasi logistik
     private static void inisialisasiPeta() {
-        // Contoh penambahan jalur antar Resto ke Blok Perumahan (Sesuaikan graf kelompokmu di sini)
+        // Penambahan jalur antar Resto ke Blok Perumahan sesuaikan graf
         tambahJalur("Resto Kenanga Asri", "Blok Cendana 1", 4);
         tambahJalur("Resto Kenanga Asri", "Blok Cendana 2", 8);
         tambahJalur("Blok Cendana 1", "Blok Cendana 3", 3);
