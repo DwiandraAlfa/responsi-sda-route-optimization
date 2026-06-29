@@ -41,9 +41,7 @@ Menggunakan algoritma Dijkstra untuk mencari rute dengan total waktu tempuh mini
 * **Extension Pack for Java**: Ekstensi resmi Microsoft untuk mengeksekusi kode Java di VS Code.
 * **GSON Library (JAR)**: Unduh file `gson-2.10.1.jar` (atau versi sejenis) dari MVNRepository.
 
----
-
-### 📂 1. Struktur Direktori Proyek
+### 1. Struktur Direktori Proyek
 Sebelum memulai, pastikan tata letak komponen berkas kode sumber (*source code*) dan pustaka pihak ketiga di dalam folder kerja Anda disusun persis seperti skema gabungan di bawah ini:
 
 ```text
@@ -56,7 +54,67 @@ Sebelum memulai, pastikan tata letak komponen berkas kode sumber (*source code*)
 │   ├── MapGraph.java                   # Struktur data Graf & algoritma Dijkstra
 │   └── RouteOptimizationApp.java       # Berkas utama (Main backend server)
 ├── index.html                          # Tampilan utama Dashboard (Frontend web)
+```
+### 2. Langkah Setup & Menjalankan Backend (Java via VS Code)
 
+1. **Buka Folder Kerja di VS Code** Buka aplikasi VS Code, klik **File** > **Open Folder...**, lalu pilih folder direktori utama proyek Anda (bukan folder `src`-nya saja, tetapi folder induknya yang berisi `index.html` dan `gson-2.10.1.jar`).
 
+2. **Memasukkan Library GSON ke Proyek Java** * Pada bilah navigasi kiri (*sidebar*) VS Code, gulir ke bawah hingga Anda menemukan panel bernama **Java Projects**.
+   * Cari dan ekspand sub-menu **Referenced Libraries** di dalam panel tersebut.
+   * Klik ikon tombol **`+` (Add Library)** yang terletak di sebelah kanan menu Referenced Libraries.
+   * Arahkan ke berkas `gson-2.10.1.jar` yang berada di direktori utama folder proyek Anda, kemudian klik **OK/Open**. Langkah ini mutlak diperlukan agar pustaka pembaca JSON dapat dimuat tanpa memicu *error compilation*.
+
+3. **Mengeksekusi Server (Run)** * Buka folder `src` lalu klik berkas utama server: **`RouteOptimizationApp.java`**.
+   * Cari teks melayang (*CodeLens*) kecil bertuliskan **Run** tepat di atas baris fungsi `public static void main(String[] args)`, atau klik tombol ikon **Play/Run Java** yang berada di pojok kanan atas layar editor.
+
+4. **Verifikasi Output Server** Jika server berhasil melakukan alokasi *socket*, panel **Terminal** terintegrasi di bagian bawah VS Code akan mengeluarkan log keluaran berikut:
+   ```text
+   =================================================
+   Server RouteOptimization berjalan di http://localhost:8080
+   =================================================
+   ```
+### 3. Langkah Menjalankan Frontend (Aplikasi Web)
+
+Aplikasi klien (*frontend UI*) dirancang secara portabel sebagai *Single Page Application* murni menggunakan kombinasi Vanilla JS dan Tailwind CSS. Anda tidak memerlukan proses instalasi ataupun server web eksternal terpisah.
+
+1. Buka folder kerja proyek Anda melalui jendela File Explorer bawaan sistem operasi komputer Anda.
+2. Cari berkas bernama **`index.html`** yang berada di luar folder `src`.
+3. **Klik ganda (double-click)** pada file `index.html` tersebut untuk membuka panel kendali kurir secara langsung melalui peramban internet (*web browser*) utama Anda, seperti Google Chrome, Mozilla Firefox, atau Microsoft Edge.
+
+### 4. Prosedur Pengujian Alur Integrasi Aplikasi
+
+Setelah server *backend* aktif dan halaman *frontend* berhasil dibuka, Anda dapat mencoba dan menguji fungsionalitas fitur sistem manajemen distribusi kurir melalui panel kontrol utama dengan alur sebagai berikut:
+
+1. **Membuat Simulasi Input Pesanan Baru**
+   * Perhatikan panel form **Input Pesanan Baru**. Isilah kolom **ID Pesanan** yang ingin disimulasikan (atau biarkan nomor urutan otomatis berjalan).
+   * Pilih lokasi **Asal (Restoran)** dan lokasi **Tujuan (Blok Rumah Pelanggan)** melalui menu *dropdown*. 
+   * Tekan tombol **Tambah ke Antrean**. Jika berhasil, sistem akan memicu *toast notification* sukses di pojok kanan bawah yang menandakan data berhasil masuk ke memori sistem.
+
+2. **Analisis Rute dan Urutan Prioritas Antrean (*Priority Queue*)**
+   * Ketika pesanan ditambahkan, data dikirim langsung ke server untuk diproses menggunakan **Algoritma Dijkstra**.
+   * Di dalam tabel **Daftar Antrean Prioritas Pengiriman**, sistem secara otomatis mengurutkan baris pesanan berdasarkan kriteria bobot **Jarak Terpendek (km)** dan **Estimasi Waktu Tercepat (menit)**, bukan berdasarkan waktu input data.
+   * Komponen antrean menampilkan informasi lengkap dari rute perjalanan: dari simpul asal mana, melewati jalur/gang apa saja, hingga tiba di simpul tujuan akhir, lengkap dengan analisis kalkulasi angka numeriknya.
+
+3. **Visualisasi Jaringan Map Graph**
+   * Di sisi kanan dashboard, Anda dapat melihat panel **Informasi Konektivitas Jaringan Peta (Map Graph)**.
+   * Fitur ini menyajikan data pemetaan graf secara terperinci mengenai simpul-simpul asal yang terdaftar, hubungan koneksi ke simpul tetangganya (interkoneksi antar gang/blok), serta informasi bobot waktu *default* dalam satuan menit yang menjadi acuan perhitungan algoritma.
+
+4. **Eksekusi dan Reset Antrean**
+   * Anda dapat menekan ikon aksi (tombol hapus/selesai) pada setiap baris pesanan untuk menyimulasikan bahwa kurir telah menyelesaikan tugas pengantaran tersebut. Sistem akan langsung menghapusnya dan melakukan kalkulasi ulang pada sisa antrean.
+   * Gunakan tombol **Reset Orders** jika ingin membersihkan seluruh daftar antrean secara instan dari layar monitor.
+---
 ## vi. Library Eksternal
+Aplikasi ini menggunakan **1 library eksternal (pihak ketiga)** sebagai komponen pendukung interkoneksi data:
+
+* **Nama Library**: Google GSON (`gson-2.10.1.jar`)
+* **Tempat Penggunaan (Dimana Digunakan)**: 
+  * Berkas Utama: **`src/RouteOptimizationApp.java`**
+  * Tanda Impor Kode Sumber (paling atas):
+    ```java
+    import com.google.gson.Gson;
+    ```
+* **Fungsi Utama**: 
+  Library ini bertugas menjembatani komunikasi data antara *backend* dan *frontend*. GSON melakukan proses *serialization* dan *deserialization*, yaitu mengubah struktur data objek internal Java (seperti hasil kalkulasi rute terpendek dari Algoritma Dijkstra) menjadi format teks **JSON**. Format JSON inilah yang kemudian dikirimkan melalui HTTP Server agar bisa dibaca, diurai, dan ditampilkan secara grafis oleh komponen *frontend* (`index.html`).
+
+---
 
