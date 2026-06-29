@@ -35,7 +35,12 @@ Menggunakan algoritma Dijkstra untuk mencari rute dengan total waktu tempuh mini
 ---
 
 ## v. Panduan Instalasi dan Menjalankan Program
+###  Prasyarat Sistem
+* **Java Development Kit (JDK)**: Versi 8 atau yang lebih baru (Disarankan JDK 11 atau 17).
+* **Visual Studio Code (VS Code)**.
+* **Extension Pack for Java**: Ekstensi resmi Microsoft untuk mengeksekusi kode Java di VS Code.
 
+---
 
 ## vi. Library Eksternal
 
