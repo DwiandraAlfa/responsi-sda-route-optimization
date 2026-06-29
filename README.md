@@ -39,8 +39,24 @@ Menggunakan algoritma Dijkstra untuk mencari rute dengan total waktu tempuh mini
 * **Java Development Kit (JDK)**: Versi 8 atau yang lebih baru (Disarankan JDK 11 atau 17).
 * **Visual Studio Code (VS Code)**.
 * **Extension Pack for Java**: Ekstensi resmi Microsoft untuk mengeksekusi kode Java di VS Code.
+* **GSON Library (JAR)**: Unduh file `gson-2.10.1.jar` (atau versi sejenis) dari MVNRepository.
 
 ---
+
+### 📂 1. Struktur Direktori Proyek
+Sebelum memulai, pastikan tata letak komponen berkas kode sumber (*source code*) dan pustaka pihak ketiga di dalam folder kerja Anda disusun persis seperti skema gabungan di bawah ini:
+
+```text
+📁 nama-folder-proyek-anda/
+├── 📁 .vscode/                         # Folder konfigurasi otomatis VS Code
+│   └── settings.json                   # Fail backup library GSON (Solusi alternatif)
+├── 📁 src/                             # Direktori khusus seluruh berkas Java
+│   ├── DefaultMapData.java             # Berkas data peta internal
+│   ├── FoodOrder.java                  # Model data & logika komparasi antrean
+│   ├── MapGraph.java                   # Struktur data Graf & algoritma Dijkstra
+│   └── RouteOptimizationApp.java       # Berkas utama (Main backend server)
+├── index.html                          # Tampilan utama Dashboard (Frontend web)
+
 
 ## vi. Library Eksternal
 
