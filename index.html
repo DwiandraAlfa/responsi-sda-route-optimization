@@ -1,435 +1,1215 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RouteOptimization System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RouteOptimization — Sistem Komputasi Distribusi & Prioritas Rute</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0E1A;
+    --bg-soft:#0E1224;
+    --panel:#11152A;
+    --panel-2:#0C0F20;
+    --line:#23283F;
+    --line-soft:#1A1E33;
+    --indigo:#5B5FEF;
+    --indigo-2:#7C7FF2;
+    --blue:#3B82F6;
+    --text:#E7E9F5;
+    --text-dim:#8A8FAE;
+    --text-faint:#5C6080;
+    --red:#E5484D;
+    --red-bg:rgba(229,72,77,0.12);
+    --red-line:rgba(229,72,77,0.35);
+    --green:#34D399;
+    --amber:#F5A623;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  ::selection{background:var(--indigo); color:#fff;}
+
+  /* ===== LANDING PAGE TAMPILAN AWAL ===== */
+  .landing-page {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at center, #141936 0%, #0B0E1A 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    padding: 20px;
+    text-align: center;
+  }
+  .landing-page.hide {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.02);
+  }
+  .landing-title {
+    font-size: 56px;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+  }
+  .landing-desc {
+    font-size: 15px;
+    color: var(--text-dim);
+    max-width: 620px;
+    line-height: 1.6;
+    margin: 0 0 32px 0;
+    font-weight: 400;
+  }
+  .btn-landing {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--indigo), var(--blue));
+    color: white;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 25px -5px rgba(91,95,239,0.5);
+    transition: transform 0.2s ease, filter 0.2s ease;
+    width: auto;
+  }
+  .btn-landing:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+  }
+  .btn-landing:active {
+    transform: translateY(1px);
+  }
+  .landing-footer {
+    position: absolute;
+    bottom: 30px;
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ===== MAIN CONTENT DASHBOARD ===== */
+  .dashboard-wrapper {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .dashboard-wrapper.show {
+    opacity: 1;
+  }
+
+  /* ===== Top bar ===== */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 32px;
+    border-bottom:1px solid var(--line-soft);
+    background:var(--bg-soft);
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .brand-icon{
+    width:46px;height:46px;
+    border-radius:12px;
+    background:linear-gradient(135deg, var(--indigo), var(--blue));
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    box-shadow:0 6px 16px -4px rgba(91,95,239,0.5);
+  }
+  .brand-text h1{
+    font-size:21px;
+    font-weight:800;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .brand-text p{
+    font-size:12.5px;
+    color:var(--text-dim);
+    margin:2px 0 0;
+  }
+  .status-group{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .pill{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:12.5px;
+    font-weight:600;
+    padding:7px 14px;
+    border-radius:8px;
+  }
+  .pill-status{
+    color:var(--red);
+    background:var(--red-bg);
+    border:1px solid var(--red-line);
+  }
+  .pill-status .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--red);
+    box-shadow:0 0 0 0 rgba(229,72,77,0.5);
+    animation:dotpulse 1.8s ease-out infinite;
+  }
+  @keyframes dotpulse{
+    0%{ box-shadow:0 0 0 0 rgba(229,72,77,0.55); }
+    70%{ box-shadow:0 0 0 6px rgba(229,72,77,0); }
+    100%{ box-shadow:0 0 0 0 rgba(229,72,77,0); }
+  }
+  .pill-status.online{ color:var(--green); background:rgba(52,211,153,0.1); border-color:rgba(52,211,153,0.3); }
+  .pill-status.online .dot{ background:var(--green); animation:none; }
+
+  .pill-port{
+    color:var(--blue);
+    background:rgba(59,130,246,0.1);
+    border:1px solid rgba(59,130,246,0.3);
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  /* ===== Layout ===== */
+  .layout{
+    display:grid;
+    grid-template-columns:380px 1fr;
+    gap:22px;
+    padding:28px 32px 40px;
+    max-width:1600px;
+    margin:0 auto;
+    align-items:start;
+  }
+  @media (max-width:980px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .col-left{
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+  .col-right{
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+    min-width:0;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px;
+  }
+  .card-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .card-head svg{ flex-shrink:0; color:var(--indigo-2); }
+  .card-head h2{
+    font-size:16px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.005em;
+  }
+  .card-head .right{ margin-left:auto; }
+
+  label{
+    display:block;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    color:var(--text-dim);
+    margin-bottom:8px;
+    text-transform:uppercase;
+  }
+  .field{ margin-bottom:18px; }
+  .field:last-of-type{ margin-bottom:0; }
+
+  select, input{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:13px 14px;
+    border-radius:9px;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    font-weight:500;
+    appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8' fill='none'%3E%3Cpath d='M1 1L7 7L13 1' stroke='%238A8FAE' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    padding-right:36px;
+    cursor:pointer;
+  }
+  input::placeholder{ color:var(--text-faint); }
+  select:focus, input:focus{
+    outline:none;
+    border-color:var(--indigo);
+    box-shadow:0 0 0 3px rgba(91,95,239,0.18);
+  }
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    border:none;
+    border-radius:9px;
+    cursor:pointer;
+    transition:filter 0.15s ease, transform 0.1s ease;
+    width:100%;
+    padding:14px;
+  }
+  button:active{ transform:translateY(1px); }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--indigo), var(--blue));
+    color:#fff;
+    box-shadow:0 8px 20px -6px rgba(91,95,239,0.55);
+  }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-secondary{
+    background:var(--panel-2);
+    color:var(--text-dim);
+    border:1px solid var(--line);
+  }
+  .btn-secondary:hover{ color:var(--text); border-color:var(--text-faint); }
+  .btn-danger-ghost{
+    width:auto;
+    padding:9px 16px;
+    font-size:13px;
+    background:var(--red-bg);
+    color:var(--red);
+    border:1px solid var(--red-line);
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .btn-danger-ghost:hover{ background:rgba(229,72,77,0.18); }
+
+  .field-error{
+    font-size:12px;
+    color:var(--red);
+    margin-top:8px;
+    display:none;
+  }
+
+  /* ===== Route result ===== */
+  .route-result{
+    margin-top:16px;
+    padding:16px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--panel-2);
+    display:none;
+  }
+  .route-result.show{ display:block; }
+  .route-result.unreachable{ border-color:var(--red-line); background:var(--red-bg); }
+  .route-result .stat-row{
+    display:flex;
+    gap:22px;
+    margin-bottom:12px;
+  }
+  .route-result .stat b{
+    display:block;
+    font-size:20px;
+    font-weight:800;
+    color:var(--indigo-2);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .route-result.unreachable .stat b{ color:var(--red); }
+  .route-result .stat span{
+    font-size:10.5px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-weight:600;
+  }
+  .route-result .path-trail{
+    font-size:12.5px;
+    color:var(--text-dim);
+    line-height:1.7;
+    padding-top:10px;
+    border-top:1px solid var(--line-soft);
+  }
+  .route-result .path-trail b{ color:var(--text); font-weight:600; }
+
+  /* ===== Right: queue table card ===== */
+  .queue-card{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  .table-wrap{ overflow-x:auto; }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:760px;
+  }
+  thead th{
+    text-align:left;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    padding:0 14px 14px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  thead th:last-child{ text-align:center; }
+  tbody td{
+    padding:16px 14px;
+    font-size:13.5px;
+    border-bottom:1px solid var(--line-soft);
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr.top-priority{ background:rgba(91,95,239,0.06); }
+  .rank-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;height:24px;
+    border-radius:7px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    color:var(--text-dim);
+    margin-right:9px;
+  }
+  tr.top-priority .rank-badge{
+    background:var(--indigo);
+    color:#fff;
+    border-color:var(--indigo);
+  }
+  .order-id-cell{ display:flex; align-items:center; font-family:'JetBrains Mono',monospace; font-weight:600; }
+  .loc-cell{ color:var(--text-dim); }
+  .metric-cell{ font-family:'JetBrains Mono',monospace; color:var(--text); }
+  .metric-cell.unreach{ color:var(--red); }
+  .eta-cell b{ font-family:'JetBrains Mono',monospace; color:var(--green); }
+  .eta-cell.unreach b{ color:var(--red); }
+  .eta-cell span{ display:block; font-size:10px; color:var(--text-faint); margin-top:2px; }
+  .action-cell{ text-align:center; }
+  .row-delete{
+    width:32px;height:32px;
+    padding:0;
+    border-radius:7px;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text-faint);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .row-delete:hover{ color:var(--red); border-color:var(--red-line); background:var(--red-bg); }
+
+  .empty-state{
+    padding:70px 20px;
+    text-align:center;
+    color:var(--text-dim);
+  }
+  .empty-state .glyph{
+    margin-bottom:14px;
+    color:var(--text-faint);
+    display:flex;
+    justify-content:center;
+  }
+  .empty-state p{ margin:0; font-size:13.5px; }
+
+  /* ===== Map card ===== */
+  .map-card{ flex:1; display:flex; flex-direction:column; }
+  .map-wrap{
+    position:relative;
+    flex:1;
+    border-radius:10px;
+    background:
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px) 0 0/26px 26px,
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px) 0 0/26px 26px,
+      var(--panel-2);
+    border:1px solid var(--line);
+    overflow:hidden;
+    min-height:420px;
+  }
+  #map-svg{ width:100%; height:100%; display:block; }
+
+  .node-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    fill:var(--text-dim);
+    pointer-events:none;
+  }
+  .node-circle{ stroke-width:2; cursor:default; }
+  .node-circle.resto{ fill:rgba(91,95,239,0.25); stroke:var(--indigo-2); }
+  .node-circle.gang{ fill:rgba(52,211,153,0.18); stroke:var(--green); }
+  .node-circle.blok{ fill:#181C30; stroke:var(--text-faint); }
+
+  .node-circle.active-start{ fill:var(--indigo-2); stroke:var(--indigo-2); }
+  .node-circle.active-end{ fill:var(--red); stroke:var(--red); }
+  .node-circle.on-path{ fill:var(--green); stroke:var(--green); animation:nodepulse 1.4s ease-in-out infinite; }
+  @keyframes nodepulse{
+    0%,100%{ filter:drop-shadow(0 0 0px var(--green)); }
+    50%{ filter:drop-shadow(0 0 6px var(--green)); }
+  }
+
+  .edge-line{ stroke:var(--line); stroke-width:1.6; }
+  .edge-line.path-edge{
+    stroke:var(--indigo-2);
+    stroke-width:3;
+    stroke-dasharray:6 4;
+    animation:dash 0.9s linear infinite;
+  }
+  @keyframes dash{ to{ stroke-dashoffset:-20; } }
+  .edge-weight{
+    font-family:'JetBrains Mono',monospace;
+    font-size:8.5px;
+    fill:var(--text-faint);
+    pointer-events:none;
+  }
+
+  .legend{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    padding:14px 4px 0;
+    font-size:11.5px;
+    color:var(--text-dim);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:7px; font-weight:500; }
+  .dot2{ width:9px;height:9px;border-radius:50%; display:inline-block; }
+  .dot2.resto{ background:var(--indigo-2); }
+  .dot2.gang{ background:var(--green); }
+  .dot2.blok{ background:var(--text-faint); }
+
+  .meta-strip{
+    display:flex;
+    gap:24px;
+    font-size:12px;
+    color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .meta-strip b{ color:var(--text); }
+
+  /* ===== TOAST NOTIFICATION CORNER ===== */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 10000;
+  }
+  .toast {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 14px 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(20px);
+    opacity: 0;
+    animation: toastIn 0.3s forwards, toastOut 0.3s linear 3.5s forwards;
+  }
+  .toast.success { border-left: 4px solid var(--green); }
+  .toast.danger { border-left: 4px solid var(--red); }
+  @keyframes toastIn {
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes toastOut {
+    to { transform: translateY(-10px); opacity: 0; }
+  }
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans transition-all duration-500">
+<body>
 
-    <div id="landingPage" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-tr from-slate-950 via-slate-900 to-blue-950 text-white px-4 text-center transition-all duration-700">
-        <div class="max-w-3xl space-y-6">
-            <h1 class="text-5xl font-extrabold tracking-tight sm:text-6xl drop-shadow-sm">
-                RouteOptimization
-            </h1>
-            <p class="text-base sm:text-lg text-slate-400 font-light max-w-2xl mx-auto leading-relaxed">
-                Sistem Analisis Distribusi Logistik Berbasis Algoritma Dijkstra dan Struktur Data Priority Queue. Mengoptimalkan penentuan rute terpendek serta pengurutan prioritas pengantaran pesanan secara matematis, presisi, dan real-time.
-            </p>
-            <div class="pt-4">
-                <button onclick="masukDashboard()" class="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 font-semibold rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 group">
-                    Buka Dashboard
-                    <i data-lucide="arrow-right" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>
-                </button>
-            </div>
+<div class="landing-page" id="landing-page">
+  <h1 class="landing-title">RouteOptimization</h1>
+  <p class="landing-desc">Sistem Analisis Distribusi Logistik Berbasis Algoritma Dijkstra dan Struktur Data Priority Queue. Mengoptimalkan penentuan rute terpendek serta pengurutan prioritas pengantaran pesanan secara matematis, presisi, dan real-time.</p>
+  <button class="btn-landing" id="btn-enter">
+    Buka Dashboard
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+  </button>
+  <div class="landing-footer">Dibuat oleh Kelompok 1</div>
+</div>
+
+<div class="dashboard-wrapper" id="dashboard-wrapper">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 18V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h2"/>
+          <path d="M15 18H9"/>
+          <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+          <circle cx="7" cy="18" r="2"/>
+          <circle cx="17" cy="18" r="2"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>RouteOptimization</h1>
+        <p>Sistem Komputasi Distribusi &amp; Prioritas Rute</p>
+      </div>
+    </div>
+    <div class="status-group">
+      <span class="pill pill-status" id="server-pill"><span class="dot"></span> Server Terputus</span>
+      <span class="pill pill-port">Port 8080</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="col-left">
+      <div class="card">
+        <div class="card-head">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          <h2>Registrasi Manifest Pesanan</h2>
         </div>
-        <div class="absolute bottom-8 text-xs text-slate-600 font-mono tracking-wider">
-            Dibuat Oleh Kelompok 3
+
+        <div class="field">
+          <label for="order-id">ID Pesanan (Otomatis)</label>
+          <input id="order-id" type="text" readonly style="background: var(--bg); color: var(--indigo-2); font-family: 'JetBrains Mono'; font-weight: bold;">
         </div>
+
+        <div class="field">
+          <label for="order-asal">Titik Asal (Restoran)</label>
+          <select id="order-asal"></select>
+        </div>
+
+        <div class="field">
+          <label for="order-tujuan">Titik Tujuan (Destinasi)</label>
+          <select id="order-tujuan"></select>
+        </div>
+
+        <button class="btn-primary" id="btn-add-order">Masukkan ke Antrian Prioritas</button>
+        <div class="field-error" id="order-error"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+          <h2>Analisis Rute Independen</h2>
+        </div>
+
+        <div class="field">
+          <label for="route-from">Simpul Awal (Node Asal)</label>
+          <select id="route-from"></select>
+        </div>
+
+        <div class="field">
+          <label for="route-to">Simpul Akhir (Node Tujuan)</label>
+          <select id="route-to"></select>
+        </div>
+
+        <button class="btn-secondary" id="btn-find-route">Hitung Lintasan Terpendek</button>
+
+        <div class="route-result" id="route-result"></div>
+      </div>
     </div>
 
-    <div id="mainDashboard" class="opacity-0 pointer-events-none transition-opacity duration-700 min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-        
-        <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40 shadow-md">
-            <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl text-white shadow-md">
-                        <i data-lucide="truck" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold tracking-tight text-white">
-                            RouteOptimization
-                        </h2>
-                        <p class="text-[11px] text-slate-400 font-semibold tracking-wide">Sistem Komputasi Distribusi & Prioritas Rute</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span id="serverStatus" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-950/50 text-rose-400 border border-rose-900/50">
-                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                        Mengecek Server
-                    </span>
-                    <span class="text-xs font-semibold text-blue-400 px-3 py-1 bg-blue-950/50 rounded-md border border-blue-900/50">Port 8080</span>
-                </div>
-            </div>
-        </header>
-
-        <main class="max-w-7xl mx-auto px-6 py-8">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                <div class="lg:col-span-4 flex flex-col gap-6">
-                    
-                    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                        <div class="flex items-center gap-2 mb-5 pb-3 border-b border-slate-800">
-                            <i data-lucide="plus-circle" class="text-blue-400 w-4 h-4"></i>
-                            <h3 class="text-sm font-bold text-white tracking-wide">Registrasi Manifest Pesanan</h3>
-                        </div>
-                        <form id="orderForm" class="space-y-4">
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Titik Asal (Restoran)</label>
-                                <select id="asal" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium">
-                                    <option value="Resto Kenanga Asri">Resto Kenanga Asri</option>
-                                    <option value="Resto Pondok Mertua">Resto Pondok Mertua</option>
-                                    <option value="Resto Graha Mawar">Resto Graha Mawar</option>
-                                    <option value="Resto Ayam Geprek">Resto Ayam Geprek</option>
-                                    <option value="Resto Bebek Slamet">Resto Bebek Slamet</option>
-                                    <option value="Resto Warmindo Selera">Resto Warmindo Selera</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Titik Tujuan (Destinasi)</label>
-                                <select id="tujuan" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition font-medium">
-                                    <option value="Blok Cendana 1">Blok Cendana 1</option>
-                                    <option value="Blok Cendana 2">Blok Cendana 2</option>
-                                    <option value="Blok Cendana 3">Blok Cendana 3</option>
-                                    <option value="Blok Cendana 4">Blok Cendana 4</option>
-                                    <option value="Blok Akasia 1">Blok Akasia 1</option>
-                                    <option value="Blok Akasia 2">Blok Akasia 2</option>
-                                    <option value="Blok Akasia 3">Blok Akasia 3</option>
-                                    <option value="Blok Akasia 4">Blok Akasia 4</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl text-sm transition-all duration-300 shadow-md flex items-center justify-center gap-2">
-                                Masukkan ke Antrian Prioritas
-                            </button>
-                        </form>
-                    </section>
-
-                    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                        <div class="flex items-center gap-2 mb-5 pb-3 border-b border-slate-800">
-                            <i data-lucide="navigation" class="text-indigo-400 w-4 h-4"></i>
-                            <h3 class="text-sm font-bold text-white tracking-wide">Analisis Rute Independen</h3>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Simpul Awal (Node Asal)</label>
-                                <input type="text" id="cekAsal" placeholder="Contoh: Gang Sawo" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium" />
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Simpul Akhir (Node Tujuan)</label>
-                                <input type="text" id="cekTujuan" placeholder="Contoh: Blok Akasia 1" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium" />
-                            </div>
-                            <button onclick="hitungJalurManual()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-750 text-white font-semibold rounded-xl text-sm transition-all duration-300 shadow-sm flex items-center justify-center gap-2 border border-slate-700">
-                                Hitung Lintasan Terpendek
-                            </button>
-                        </div>
-                        <div id="hasilManual" class="mt-4 transition-all duration-300"></div>
-                    </section>
-                </div>
-
-                <div class="lg:col-span-8 flex flex-col gap-6">
-                    
-                    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex-1 flex flex-col">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-3 border-b border-slate-800">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="list-ordered" class="text-blue-400 w-4 h-4"></i>
-                                <h3 class="text-sm font-bold text-white tracking-wide">Urutan Eksekusi Logistik (Priority Queue)</h3>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="resetSemuaAntrian()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/30 border border-rose-900/50 text-xs font-semibold text-rose-400 rounded-lg transition-all shadow-sm">
-                                    <i data-lucide="trash-2" class="w-3 h-3"></i> Kosongkan Data
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="overflow-x-auto flex-1">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="border-b border-slate-800 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-950/40">
-                                        <th class="py-3 px-4">ID Pesanan</th>
-                                        <th class="py-3 px-4">Titik Penjemputan</th>
-                                        <th class="py-3 px-4">Titik Pengantaran</th>
-                                        <th class="py-3 px-4">Metrik Jarak</th>
-                                        <th class="py-3 px-4">Estimasi Waktu</th>
-                                        <th class="py-3 px-4 text-center">Opsi Penanganan</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabelPesanan" class="text-sm divide-y divide-slate-800 font-medium text-slate-300">
-                                    </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <section id="ruteCard" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl hidden transition-all duration-300">
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="map-pin" class="text-blue-400 w-4 h-4"></i>
-                                <h4 class="text-sm font-bold text-white tracking-wide">Kalkulasi dan Pemetaan Topologi Lintasan</h4>
-                            </div>
-                            <button onclick="tutupRuteCard()" class="text-slate-500 hover:text-slate-400 transition">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                            <div class="md:col-span-7 space-y-4">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="bg-gradient-to-br from-blue-950/40 to-blue-900/20 border border-blue-900/50 p-3 rounded-xl">
-                                        <p class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Durasi Perjalanan</p>
-                                        <p id="totalWaktuText" class="text-xl font-bold text-blue-200">-</p>
-                                    </div>
-                                    <div class="bg-gradient-to-br from-indigo-950/40 to-indigo-900/20 border border-indigo-900/50 p-3 rounded-xl">
-                                        <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Jarak Kumulatif</p>
-                                        <p id="totalJarakText" class="text-xl font-bold text-indigo-200">-</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Urutan Akses Simpul (Path)</p>
-                                    <div id="jalurPerjalanan" class="flex flex-wrap items-center gap-2 text-xs bg-slate-950 border border-slate-800 p-4 rounded-xl font-medium text-slate-300">
-                                        </div>
-                                </div>
-                            </div>
-                            <div class="md:col-span-5 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
-                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-4 text-center">Hierarki Visual Lintasan</span>
-                                <div class="flex flex-col items-center gap-3 py-2" id="visualPathFlow">
-                                    </div>
-                            </div>
-                        </div>
-                    </section>
-
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="statusModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-        <div class="bg-slate-900 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl text-center border border-slate-800">
-            <div id="modalIconContainer" class="mx-auto w-10 h-10 flex items-center justify-center rounded-full mb-4"></div>
-            <h4 id="modalTitle" class="text-base font-bold text-white mb-1">Notifikasi Sistem</h4>
-            <p id="modalBody" class="text-xs text-slate-400 mb-6 leading-relaxed"></p>
-            <button onclick="tutupModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs transition border border-slate-700">
-                Selesai
+    <div class="col-right">
+      <div class="card queue-card">
+        <div class="card-head">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          <h2>Urutan Eksekusi Logistik (Priority Queue)</h2>
+          <div class="right">
+            <button class="btn-danger-ghost" id="btn-reset-orders">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>
+              Kosongkan Data
             </button>
+          </div>
         </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Pesanan</th>
+                <th>Titik Penjemputan</th>
+                <th>Titik Pengantaran</th>
+                <th>Metrik Jarak</th>
+                <th>Estimasi Waktu</th>
+                <th>Opsi Penanganan</th>
+              </tr>
+            </thead>
+            <tbody id="queue-body"></tbody>
+          </table>
+          <div class="empty-state" id="queue-empty">
+            <div class="glyph">
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+            </div>
+            <p>Tidak ada pesanan aktif. Silakan tambahkan manifes baru.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card map-card">
+        <div class="card-head">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4Z"/><path d="M8 2v16M16 6v16"/></svg>
+          <h2>Peta Jaringan Distribusi</h2>
+          <div class="right meta-strip">
+            <span><b id="node-count">0</b> simpul</span>
+            <span><b id="edge-count">0</b> jalur</span>
+          </div>
+        </div>
+        <div class="map-wrap">
+          <svg id="map-svg" viewBox="0 0 900 560"></svg>
+        </div>
+        <div class="legend">
+          <span><span class="dot2 resto"></span> Restoran</span>
+          <span><span class="dot2 gang"></span> Gang / Jalan utama</span>
+          <span><span class="dot2 blok"></span> Blok rumah pelanggan</span>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <script>
-        const API_BASE = 'http://localhost:8080/api';
-        let idCounter = 1;
+<div class="toast-container" id="toast-container"></div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            sessionStorage.removeItem('antrian_pesanan');
-            
-            testServerConnection();
-            loadAntrian();
-            
-            setInterval(testServerConnection, 5000);
-        });
+<script>
+/* =========================================================================
+   PORTING LOGIC JAVA -> JAVASCRIPT
+   ========================================================================= */
 
-        function masukDashboard() {
-            const landing = document.getElementById('landingPage');
-            const dashboard = document.getElementById('mainDashboard');
+class Location {
+  constructor(name) { this.name = name; }
+  getName() { return this.name; }
+  toString() { return this.name; }
+}
 
-            landing.classList.add('opacity-0', 'pointer-events-none');
-            dashboard.classList.remove('opacity-0', 'pointer-events-none');
+class Edge {
+  constructor(destination, weight) {
+    this.destination = destination;
+    this.weight = weight;
+  }
+  getDestination() { return this.destination; }
+  getWeight() { return this.weight; }
+}
+
+class Graph {
+  constructor() {
+    this.locations = new Map();
+    this.adjacencyList = new Map();
+  }
+  addLocation(name) {
+    if (!this.locations.has(name)) {
+      this.locations.set(name, new Location(name));
+      this.adjacencyList.set(name, []);
+    }
+  }
+  addEdge(from, to, weightInMinutes) {
+    this.addLocation(from);
+    this.addLocation(to);
+    const fromLocation = this.locations.get(from);
+    const toLocation = this.locations.get(to);
+    this.adjacencyList.get(from).push(new Edge(toLocation, weightInMinutes));
+    this.adjacencyList.get(to).push(new Edge(fromLocation, weightInMinutes));
+  }
+  getNeighbors(locationName) { return this.adjacencyList.get(locationName) || []; }
+  getLocation(name) { return this.locations.get(name); }
+  hasLocation(name) { return this.locations.has(name); }
+  getAllLocations() { return Array.from(this.locations.values()); }
+  getAllLocationNames() { return Array.from(this.locations.keys()); }
+  getAllEdgesOnce() {
+    const seen = new Set();
+    const result = [];
+    for (const [from, edges] of this.adjacencyList.entries()) {
+      for (const edge of edges) {
+        const to = edge.getDestination().getName();
+        const key = [from, to].sort().join('::') + '::' + edge.getWeight();
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push({ from, to, weight: edge.getWeight() });
         }
+      }
+    }
+    return result;
+  }
+}
 
-        async function testServerConnection() {
-            const badge = document.getElementById('serverStatus');
-            try {
-                const res = await fetch(`${API_BASE}/pesanan`);
-                if (res.ok || res.status === 200) {
-                    badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/50 text-emerald-400 border border-emerald-900/50";
-                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Server Terhubung`;
-                } else {
-                    throw new Error();
-                }
-            } catch (err) {
-                badge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-950/50 text-rose-400 border border-rose-900/50";
-                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span> Server Terputus`;
-            }
+class Dijkstra {
+  static shortestPath(graph, start, end) {
+    const distances = new Map();
+    const previous = new Map();
+
+    for (const loc of graph.getAllLocations()) distances.set(loc.getName(), Infinity);
+
+    if (!graph.hasLocation(start) || !graph.hasLocation(end)) {
+      return { totalDistance: Infinity, path: [] };
+    }
+
+    distances.set(start, 0);
+    const pq = new MinHeap();
+    pq.push({ name: start, distance: 0 });
+
+    while (!pq.isEmpty()) {
+      const currentObj = pq.pop();
+      const current = currentObj.name;
+      const currentDist = currentObj.distance;
+
+      if (current === end) break;
+      if (currentDist > distances.get(current)) continue;
+
+      for (const edge of graph.getNeighbors(current)) {
+        const neighborName = edge.getDestination().getName();
+        const newDist = distances.get(current) + edge.getWeight();
+        if (newDist < distances.get(neighborName)) {
+          distances.set(neighborName, newDist);
+          previous.set(neighborName, current);
+          pq.push({ name: neighborName, distance: newDist });
         }
+      }
+    }
 
-        function getLocalData() {
-            const data = sessionStorage.getItem('antrian_pesanan');
-            return data ? JSON.parse(data) : [];
-        }
+    const finalDistance = distances.get(end);
+    const path = Dijkstra.reconstructPath(previous, start, end, finalDistance);
+    return { totalDistance: finalDistance, path };
+  }
 
-        function saveLocalData(data) {
-            data.sort((a, b) => a.jarakKm - b.jarakKm);
-            sessionStorage.setItem('antrian_pesanan', JSON.stringify(data));
-        }
+  static reconstructPath(previous, start, end, finalDistance) {
+    const path = [];
+    if (finalDistance === Infinity) return path;
+    let current = end;
+    path.push(current);
+    while (current !== start) {
+      current = previous.get(current);
+      path.push(current);
+    }
+    path.reverse();
+    return path;
+  }
+}
 
-        function loadAntrian() {
-            const data = getLocalData();
-            const tbody = document.getElementById('tabelPesanan');
-            tbody.innerHTML = '';
+class MinHeap {
+  constructor() { this.items = []; }
+  isEmpty() { return this.items.length === 0; }
+  push(item) {
+    this.items.push(item);
+    let i = this.items.length - 1;
+    while (i > 0) {
+      const parent = Math.floor((i - 1) / 2);
+      if (this.items[parent].distance <= this.items[i].distance) break;
+      [this.items[parent], this.items[i]] = [this.items[i], this.items[parent]];
+      i = parent;
+    }
+  }
+  pop() {
+    const top = this.items[0];
+    const last = this.items.pop();
+    if (this.items.length > 0) {
+      this.items[0] = last;
+      let i = 0;
+      while (true) {
+        let left = 2 * i + 1, right = 2 * i + 2, smallest = i;
+        if (left < this.items.length && this.items[left].distance < this.items[smallest].distance) smallest = left;
+        if (right < this.items.length && this.items[right].distance < this.items[smallest].distance) smallest = right;
+        if (smallest === i) break;
+        [this.items[i], this.items[smallest]] = [this.items[smallest], this.items[i]];
+        i = smallest;
+      }
+    }
+    return top;
+  }
+}
 
-            if (data.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="py-12 text-center text-slate-500 text-xs font-medium">
-                            <div class="flex flex-col items-center gap-2 justify-center">
-                                <i data-lucide="package-open" class="w-6 h-6 text-slate-600"></i>
-                                <span>Tidak ada pesanan aktif. Silakan tambahkan manifes baru.</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                lucide.createIcons();
-                return;
-            }
+class MapGraph {
+  constructor() { this.graph = new Graph(); }
+  addLocation(name) { this.graph.addLocation(name); }
+  addEdge(from, to, weightInMinutes) { this.graph.addEdge(from, to, weightInMinutes); }
+  getNeighbors(locationName) { return this.graph.getNeighbors(locationName); }
+  findShortestPath(start, end) { return Dijkstra.shortestPath(this.graph, start, end); }
+}
 
-            data.forEach((order, index) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-800/40 transition";
-                
-                const labelUrgent = index === 0 
-                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-rose-950/60 text-rose-400 border border-rose-900/50">Prioritas Utama</span>`
-                    : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-medium bg-slate-950 text-slate-400 border border-slate-800">Antrian ${index + 1}</span>`;
+const KECEPATAN_KURIR_KM_PER_MENIT = 0.5;
 
-                tr.innerHTML = `
-                    <td class="py-4 px-4 font-mono font-bold text-white flex flex-col gap-1">
-                        <span>${order.id}</span>
-                        <div>${labelUrgent}</div>
-                    </td>
-                    <td class="py-4 px-4">${order.asal}</td>
-                    <td class="py-4 px-4">${order.tujuan}</td>
-                    <td class="py-4 px-4 font-mono text-xs text-slate-400">${order.jarakKm} km</td>
-                    <td class="py-4 px-4 font-mono text-xs text-slate-400">${order.estimasiMenit} mnt</td>
-                    <td class="py-4 px-4 text-center">
-                        <div class="flex items-center justify-center gap-2">
-                            <button onclick="kalkulasiRuteDijkstra('${order.asal}', '${order.tujuan}')" class="px-2.5 py-1.5 bg-blue-950 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-900/50 hover:border-blue-600 rounded-xl text-xs font-semibold transition-all shadow-sm inline-flex items-center gap-1">
-                                <i data-lucide="navigation-2" class="w-3 h-3"></i> Rute
-                            </button>
-                            <button onclick="hapusPesanan('${order.id}')" class="px-2.5 py-1.5 bg-rose-950/40 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-900/50 hover:border-rose-600 rounded-xl text-xs font-semibold transition-all shadow-sm inline-flex items-center gap-1">
-                                <i data-lucide="trash" class="w-3 h-3"></i> Hapus
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            lucide.createIcons();
-        }
+class FoodOrder {
+  constructor(id, asal, tujuan, peta) {
+    this.id = id;
+    this.asal = asal;
+    this.tujuan = tujuan;
 
-        document.getElementById('orderForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const asal = document.getElementById('asal').value;
-            const tujuan = document.getElementById('tujuan').value;
+    const hasil = peta.findShortestPath(asal, tujuan);
+    this.path = hasil.path;
 
-            const jarakKm = Math.floor(Math.random() * 10) + 2;
-            const estimasiMenit = jarakKm * 2;
-            const id = `ORD${String(idCounter++).padStart(3, '0')}`;
+    if (hasil.totalDistance !== Infinity) {
+      this.estimasiMenit = Math.round(hasil.totalDistance);
+      this.jarakKm = Math.round(hasil.totalDistance * KECEPATAN_KURIR_KM_PER_MENIT * 10) / 10;
+    } else {
+      this.estimasiMenit = Infinity;
+      this.jarakKm = Infinity;
+    }
+  }
+  isReachable() { return this.estimasiMenit !== Infinity; }
+  compareTo(other) { return this.estimasiMenit - other.estimasiMenit; }
+}
 
-            const data = getLocalData();
-            data.push({ id, asal, tujuan, jarakKm, estimasiMenit });
-            
-            saveLocalData(data);
-            showModal('success', 'Manifes Berhasil Didata', `Pesanan dengan ID registrasi <strong>${id}</strong> telah masuk ke dalam alur Priority Queue Sesi.`);
-            document.getElementById('orderForm').reset();
-            loadAntrian();
-        });
+class DefaultMapData {
+  static load(map) {
+    map.addEdge("Resto Kenanga Asri", "Gang Sawo", 4.0);
+    map.addEdge("Resto Pondok Mertua", "Gang Melati", 6.0);
+    map.addEdge("Resto Graha Mawar", "Gang Cempaka", 5.0);
+    map.addEdge("Resto Ayam Geprek", "Blok Akasia 4", 2.0);
+    map.addEdge("Resto Ayam Geprek", "Blok Akasia 3", 4.0);
+    map.addEdge("Resto Bebek Slamet", "Blok Cendana 4", 3.0);
+    map.addEdge("Resto Bebek Slamet", "Gang Kamboja", 5.0);
+    map.addEdge("Resto Warmindo Selera", "Blok Cendana 1", 2.5);
+    map.addEdge("Resto Warmindo Selera", "Gang Sawo", 3.5);
 
-        function hapusPesanan(id) {
-            let data = getLocalData();
-            data = data.filter(order => order.id !== id);
-            saveLocalData(data);
-            showModal('success', 'Data Dihapus', `Pesanan dengan ID <strong>${id}</strong> berhasil dikeluarkan dari antrian.`);
-            tutupRuteCard();
-            loadAntrian();
-        }
+    map.addEdge("Gang Sawo", "Gang Melati", 3.0);
+    map.addEdge("Gang Melati", "Gang Kamboja", 2.0);
+    map.addEdge("Gang Kamboja", "Gang Anggrek", 4.0);
+    map.addEdge("Gang Anggrek", "Gang Cempaka", 3.0);
+    map.addEdge("Gang Sawo", "Gang Kamboja", 6.0);
+    map.addEdge("Gang Melati", "Gang Anggrek", 5.0);
+    map.addEdge("Gang Cempaka", "Gang Sawo", 9.0);
 
-        function resetSemuaAntrian() {
-            sessionStorage.removeItem('antrian_pesanan');
-            idCounter = 1;
-            showModal('success', 'Antrian Dikosongkan', 'Seluruh data manifest simulasi pada sesi ini berhasil dibersihkan.');
-            tutupRuteCard();
-            loadAntrian();
-        }
+    map.addEdge("Gang Sawo", "Blok Cendana 1", 3.0);
+    map.addEdge("Gang Sawo", "Blok Cendana 2", 5.0);
+    map.addEdge("Gang Melati", "Blok Cendana 2", 2.0);
+    map.addEdge("Gang Melati", "Blok Cendana 3", 4.0);
+    map.addEdge("Gang Kamboja", "Blok Cendana 3", 3.0);
+    map.addEdge("Gang Kamboja", "Blok Cendana 4", 6.0);
+    map.addEdge("Gang Anggrek", "Blok Akasia 1", 4.0);
+    map.addEdge("Gang Anggrek", "Blok Akasia 2", 3.0);
+    map.addEdge("Gang Cempaka", "Blok Akasia 3", 2.0);
+    map.addEdge("Gang Cempaka", "Blok Akasia 4", 5.0);
 
-        async function kalkulasiRuteDijkstra(from, to) {
-            try {
-                const res = await fetch(`${API_BASE}/rute?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
-                const data = await res.json();
+    map.addEdge("Blok Cendana 2", "Blok Cendana 3", 2.0);
+    map.addEdge("Blok Akasia 1", "Blok Akasia 2", 2.0);
+    map.addEdge("Blok Akasia 3", "Blok Akasia 4", 3.0);
+    map.addEdge("Blok Cendana 4", "Blok Akasia 1", 7.0);
+  }
+}
 
-                if (!data.path || data.path.length === 0) {
-                    showModal('error', 'Lintasan Terputus', 'Simpul asal dan tujuan tidak memiliki keterhubungan dalam graf.');
-                    return;
-                }
+/* =========================================================================
+   APLIKASI & LOGIK BARU
+   ========================================================================= */
 
-                const ruteCard = document.getElementById('ruteCard');
-                ruteCard.classList.remove('hidden');
+const peta = new MapGraph();
+DefaultMapData.load(peta);
 
-                document.getElementById('totalWaktuText').innerText = `${data.totalDistance} Menit`;
-                document.getElementById('totalJarakText').innerText = `${(data.totalDistance * 0.5).toFixed(1)} KM`;
+class OrderQueue {
+  constructor() { this.items = []; }
+  add(order) { this.items.push(order); this.items.sort((a, b) => a.compareTo(b)); }
+  removeAt(index) { this.items.splice(index, 1); }
+  clear() { this.items = []; }
+  toArray() { return this.items; }
+  size() { return this.items.length; }
+}
+const orderQueue = new OrderQueue();
 
-                const jalurContainer = document.getElementById('jalurPerjalanan');
-                jalurContainer.innerHTML = '';
-                data.path.forEach((node, index) => {
-                    const span = document.createElement('span');
-                    span.className = `px-2.5 py-1 rounded-lg font-semibold ${index === 0 ? 'bg-blue-600 text-white' : index === data.path.length - 1 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-300 border border-slate-800'}`;
-                    span.innerText = node;
-                    jalurContainer.appendChild(span);
+// Counter untuk ID Pesanan (Mulai dari 1)
+let orderCounter = 1;
 
-                    if (index < data.path.length - 1) {
-                        const arrow = document.createElement('i');
-                        arrow.setAttribute('data-lucide', 'arrow-right');
-                        arrow.className = 'w-3 h-3 text-slate-600';
-                        jalurContainer.appendChild(arrow);
-                    }
-                });
+function updateNextOrderId() {
+  document.getElementById('order-id').value = `ORD-${String(orderCounter).padStart(3, '0')}`;
+}
 
-                const visualPath = document.getElementById('visualPathFlow');
-                visualPath.innerHTML = '';
-                data.path.forEach((node, index) => {
-                    const item = document.createElement('div');
-                    item.className = "flex flex-col items-center";
-                    let icon = "circle", color = "text-slate-600", role = "Titik Transit";
+// Fungsi Pemicu Toast Notification
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      ${type === 'success' ? '<polyline points="20 6 9 17 4 12"></polyline>' : '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>'}
+    </svg>
+    <span>${message}</span>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3800);
+}
 
-                    if (index === 0) { [icon, color, role] = ["store", "text-blue-400 font-bold", "Simpul Asal"]; }
-                    else if (index === data.path.length - 1) { [icon, color, role] = ["home", "text-indigo-400 font-bold", "Simpul Tujuan"]; }
+// Navigasi dari Landing Page ke Dashboard
+document.getElementById('btn-enter').addEventListener('click', () => {
+  document.getElementById('landing-page').classList.add('hide');
+  const wrapper = document.getElementById('dashboard-wrapper');
+  wrapper.style.display = 'block';
+  setTimeout(() => wrapper.classList.add('show'), 50);
+});
 
-                    item.innerHTML = `
-                        <div class="flex items-center gap-1.5">
-                            <i data-lucide="${icon}" class="w-3.5 h-3.5 ${color}"></i>
-                            <span class="text-xs font-bold ${color}">${node}</span>
-                        </div>
-                        <span class="text-[9px] text-slate-500 font-semibold">${role}</span>
-                    `;
-                    visualPath.appendChild(item);
+const NODE_TYPE = {
+  "Resto Kenanga Asri": "resto", "Resto Pondok Mertua": "resto", "Resto Graha Mawar": "resto",
+  "Resto Ayam Geprek": "resto", "Resto Bebek Slamet": "resto", "Resto Warmindo Selera": "resto",
+  "Gang Sawo": "gang", "Gang Melati": "gang", "Gang Kamboja": "gang", "Gang Anggrek": "gang", "Gang Cempaka": "gang",
+};
+function typeOf(name) { return NODE_TYPE[name] || "blok"; }
 
-                    if (index < data.path.length - 1) {
-                        const line = document.createElement('div');
-                        line.className = "h-3 w-0.5 bg-slate-800 my-0.5";
-                        visualPath.appendChild(line);
-                    }
-                });
+const NODE_POS = {
+  "Resto Kenanga Asri": [85, 80], "Resto Warmindo Selera": [85, 210], "Resto Pondok Mertua": [320, 55],
+  "Resto Bebek Slamet": [410, 400], "Resto Graha Mawar": [690, 80], "Resto Ayam Geprek": [770, 400],
+  "Gang Sawo": [215, 190], "Gang Melati": [375, 170], "Gang Kamboja": [425, 275], "Gang Anggrek": [555, 245], "Gang Cempaka": [625, 160],
+  "Blok Cendana 1": [175, 325], "Blok Cendana 2": [295, 305], "Blok Cendana 3": [375, 335], "Blok Cendana 4": [475, 410],
+  "Blok Akasia 1": [555, 380], "Blok Akasia 2": [605, 315], "Blok Akasia 3": [695, 275], "Blok Akasia 4": [755, 335],
+};
 
-                lucide.createIcons();
-                ruteCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } catch (err) {
-                showModal('error', 'Kehilangan Koneksi API', 'Gagal memanggil fungsi pencarian rute Dijkstra dari server Java port 8080.');
-            }
-        }
+const svg = document.getElementById('map-svg');
+const SVG_NS = "http://www.w3.org/2000/svg";
 
-        function hitungJalurManual() {
-            const from = document.getElementById('cekAsal').value;
-            const to = document.getElementById('cekTujuan').value;
-            if (!from || !to) { showModal('error', 'Parameter Kosong', 'Harap isi simpul asal dan simpul tujuan pengujian.'); return; }
-            kalkulasiRuteDijkstra(from, to);
-        }
+function buildMap() {
+  svg.innerHTML = '';
+  const names = peta.graph.getAllLocationNames();
+  const edges = peta.graph.getAllEdgesOnce();
 
-        function tutupRuteCard() { document.getElementById('ruteCard').classList.add('hidden'); }
+  edges.forEach(e => {
+    const [x1, y1] = NODE_POS[e.from] || [50, 50];
+    const [x2, y2] = NODE_POS[e.to] || [50, 50];
+    const line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('class', 'edge-line');
+    line.setAttribute('data-from', e.from); line.setAttribute('data-to', e.to);
+    svg.appendChild(line);
 
-        function showModal(type, title, body) {
-            const modal = document.getElementById('statusModal');
-            const icon = document.getElementById('modalIconContainer');
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalBody').innerHTML = body;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const label = document.createElementNS(SVG_NS, 'text');
+    label.setAttribute('x', mx); label.setAttribute('y', my - 4);
+    label.setAttribute('class', 'edge-weight'); label.setAttribute('text-anchor', 'middle');
+    label.textContent = `${e.weight}m`;
+    svg.appendChild(label);
+  });
 
-            if (type === 'success') {
-                icon.className = "mx-auto w-10 h-10 flex items-center justify-center rounded-full mb-4 bg-emerald-950 text-emerald-400 border border-emerald-900";
-                icon.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i>`;
-            } else {
-                icon.className = "mx-auto w-10 h-10 flex items-center justify-center rounded-full mb-4 bg-rose-950 text-rose-400 border border-rose-900";
-                icon.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i>`;
-            }
-            modal.classList.remove('hidden');
-            lucide.createIcons();
-        }
+  names.forEach(name => {
+    const [x, y] = NODE_POS[name] || [50, 50];
+    const type = typeOf(name);
+    const r = type === 'gang' ? 7 : 10;
 
-        function tutupModal() { document.getElementById('statusModal').classList.add('hidden'); }
-    </script>
+    const circle = document.createElementNS(SVG_NS, 'circle');
+    circle.setAttribute('cx', x); circle.setAttribute('cy', y); circle.setAttribute('r', r);
+    circle.setAttribute('class', `node-circle ${type}`); circle.setAttribute('data-name', name);
+    svg.appendChild(circle);
+
+    const label = document.createElementNS(SVG_NS, 'text');
+    label.setAttribute('x', x); label.setAttribute('y', y - r - 6);
+    label.setAttribute('class', 'node-label'); label.setAttribute('text-anchor', 'middle');
+    label.textContent = name;
+    svg.appendChild(label);
+  });
+
+  document.getElementById('node-count').textContent = names.length;
+  document.getElementById('edge-count').textContent = edges.length;
+}
+
+function clearMapHighlight() {
+  svg.querySelectorAll('.node-circle').forEach(n => {
+    const type = typeOf(n.getAttribute('data-name'));
+    n.setAttribute('class', `node-circle ${type}`);
+  });
+  svg.querySelectorAll('.edge-line').forEach(e => e.setAttribute('class', 'edge-line'));
+}
+
+function highlightPath(path, start, end) {
+  clearMapHighlight();
+  if (path.length === 0) return;
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i], b = path[i + 1];
+    const line = svg.querySelector(`line[data-from="${cssEscape(a)}"][data-to="${cssEscape(b)}"]`) ||
+                 svg.querySelector(`line[data-from="${cssEscape(b)}"][data-to="${cssEscape(a)}"]`);
+    if (line) line.classList.add('path-edge');
+  }
+  path.forEach(name => {
+    const node = svg.querySelector(`circle[data-name="${cssEscape(name)}"]`);
+    if (!node) return;
+    if (name === start) node.classList.add('active-start');
+    else if (name === end) node.classList.add('active-end');
+    else node.classList.add('on-path');
+  });
+}
+
+function cssEscape(str) { return str.replace(/(["\\])/g, '\\$1'); }
+
+function populateSelects() {
+  const names = peta.graph.getAllLocationNames();
+  const restoNames = names.filter(n => typeOf(n) === 'resto');
+
+  const fill = (selectEl, list) => {
+    selectEl.innerHTML = '';
+    list.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n; opt.textContent = n;
+      selectEl.appendChild(opt);
+    });
+  };
+
+  fill(document.getElementById('route-from'), names);
+  fill(document.getElementById('route-to'), names);
+  fill(document.getElementById('order-asal'), restoNames);
+  fill(document.getElementById('order-tujuan'), names);
+
+  document.getElementById('route-from').value = "Gang Sawo";
+  document.getElementById('route-to').value = "Blok Akasia 1";
+  document.getElementById('order-tujuan').value = "Blok Cendana 1";
+}
+
+function setServerOnline() {
+  const pill = document.getElementById('server-pill');
+  pill.classList.add('online');
+  pill.innerHTML = '<span class="dot"></span> Server Aktif';
+}
+
+document.getElementById('btn-find-route').addEventListener('click', () => {
+  const from = document.getElementById('route-from').value;
+  const to = document.getElementById('route-to').value;
+  const result = document.getElementById('route-result');
+  if (!from || !to) return;
+
+  const hasil = peta.findShortestPath(from, to);
+  highlightPath(hasil.path, from, to);
+
+  if (hasil.totalDistance === Infinity) {
+    result.className = 'route-result show unreachable';
+    result.innerHTML = `<div class="stat-row"><div class="stat"><b>—</b><span>Tidak Terhubung</span></div></div><div class="path-trail">Tidak ditemukan lintasan yang menghubungkan <b>${from}</b> ke <b>${to}</b>.</div>`;
+  } else {
+    const km = Math.round(hasil.totalDistance * KECEPATAN_KURIR_KM_PER_MENIT * 10) / 10;
+    result.className = 'route-result show';
+    result.innerHTML = `
+      <div class="stat-row">
+        <div class="stat"><b>${hasil.totalDistance}</b><span>Menit Tempuh</span></div>
+        <div class="stat"><b>${km}</b><span>Estimasi KM</span></div>
+        <div class="stat"><b>${hasil.path.length}</b><span>Simpul Dilalui</span></div>
+      </div>
+      <div class="path-trail">${hasil.path.map(p => `<b>${p}</b>`).join(' &rarr; ')}</div>
+    `;
+  }
+});
+
+function renderQueue() {
+  const body = document.getElementById('queue-body');
+  const empty = document.getElementById('queue-empty');
+  const orders = orderQueue.toArray();
+
+  if (orders.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  body.innerHTML = '';
+
+  orders.forEach((o, idx) => {
+    const tr = document.createElement('tr');
+    if (idx === 0) tr.className = 'top-priority';
+
+    tr.innerHTML = `
+      <td><span class="order-id-cell"><span class="rank-badge">${idx + 1}</span>${o.id}</span></td>
+      <td class="loc-cell">${o.asal}</td>
+      <td class="loc-cell">${o.tujuan}</td>
+      <td class="metric-cell ${!o.isReachable() ? 'unreach' : ''}">${o.isReachable() ? o.jarakKm + ' km' : 'N/A'}</td>
+      <td class="eta-cell ${!o.isReachable() ? 'unreach' : ''}">
+        ${o.isReachable() ? `<b>${o.estimasiMenit} menit</b><span>estimasi tempuh</span>` : `<b>N/A</b><span>rute putus</span>`}
+      </td>
+      <td class="action-cell">
+        <button class="row-delete" data-index="${idx}" title="Hapus pesanan">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>
+        </button>
+      </td>
+    `;
+    
+    // Logic Hapus Item Tunggal & Re-indexing ID berurutan ulang
+    tr.querySelector('.row-delete').addEventListener('click', function() {
+      const targetIdx = parseInt(this.getAttribute('data-index'));
+      const deletedOrder = orders[targetIdx];
+      
+      orderQueue.removeAt(targetIdx);
+      
+      // Mengurutkan & menata ulang ID (ORD-001, ORD-002, dst) dari data tersisa
+      const remainingOrders = orderQueue.toArray();
+      remainingOrders.forEach((order, index) => {
+        order.id = `ORD-${String(index + 1).padStart(3, '0')}`;
+      });
+      
+      // Update global counter agar mengikuti total panjang antrian yang tersisa + 1
+      orderCounter = remainingOrders.length + 1;
+      
+      updateNextOrderId();
+      renderQueue();
+      showToast(`Pesanan ${deletedOrder.id} berhasil dihapus! Antrian ditata ulang.`, 'danger');
+    });
+    
+    body.appendChild(tr);
+  });
+}
+
+document.getElementById('btn-add-order').addEventListener('click', () => {
+  const asalSel = document.getElementById('order-asal');
+  const tujuanSel = document.getElementById('order-tujuan');
+  const errorBox = document.getElementById('order-error');
+
+  const id = document.getElementById('order-id').value;
+  const asal = asalSel.value;
+  const tujuan = tujuanSel.value;
+
+  errorBox.style.display = 'none';
+
+  if (asal === tujuan) {
+    errorBox.textContent = 'Titik asal dan tujuan tidak boleh sama.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const order = new FoodOrder(id, asal, tujuan, peta);
+  orderQueue.add(order);
+  
+  // Naikkan counter ID pesanan berikutnya
+  orderCounter++;
+  
+  updateNextOrderId();
+  renderQueue();
+  showToast(`Pesanan baru ${id} berhasil dimasukkan ke Priority Queue!`);
+});
+
+document.getElementById('btn-reset-orders').addEventListener('click', () => {
+  if(orderQueue.size() > 0) {
+    orderQueue.clear();
+    orderCounter = 1;
+    updateNextOrderId();
+    renderQueue();
+    showToast("Semua data antrian logistik telah dikosongkan.", 'danger');
+  }
+});
+
+/* ---------- Init ---------- */
+buildMap();
+populateSelects();
+updateNextOrderId();
+renderQueue();
+setTimeout(setServerOnline, 600);
+</script>
+
 </body>
 </html>
